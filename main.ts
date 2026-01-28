@@ -1,7 +1,10 @@
+
 type Token = //Criação do tipo token, onde se for do tip número terá um valor que será um número 
   | { tipo: 'numero', valor: number }
   | { tipo: 'mais' }
-
+type Ast = {
+  tipo: "soma", x: number, y: number
+}
 class Lexer { 
   code: string; //atributo code, que será utilizado internamente na classe 
   idx: number = 0; //ponteiro que dirá qual posiçao atual está sendo lida 
@@ -27,10 +30,10 @@ class Lexer {
     return false;
   }
   
-  lex(): Token[] { //método que fará a conversão de string para token 
+  lex(): Token[] { //método que fará a conversão de string para token
     while (this.idx < code.length) { 
-      console.log(this.idx, code.length,code[this.idx], code[this.idx+1])
-      if (this.isNumber(code[this.idx])) { //verifica se o caracterer atual que estou é um número 
+      if (this.isNumber(code[this.idx])) { //verifica se o caracterer atual que estou é um número
+        console.log("entrou")
         let number = code[this.idx]; //pega o número atual e guardar 
         let nextChar = this.peek(); //recebe a posição do próximo índice  
 
@@ -40,16 +43,19 @@ class Lexer {
         }
 
         while (this.isNumber(nextChar)) { //enquanto o próximo caracter for um número 
+          console.log("Concatenou")
           number = number + nextChar; //concatenando o valor atual com o próximo 
           this.next(); //avançando o ponteiro 
-
+          
           nextChar = this.peek(); //observo o próximo número 
           if (nextChar === null) {
+            console.log("quebrou")
             break;
           }
         }
-
+        
         this.tokens.push({ tipo: 'numero', valor: parseInt(number) }); // converto a string em inteiro e armazeno o tipo e valor no array de tokens 
+        console.log("adicionou " + number)
         this.next()
       } else if (code[this.idx] === "+") {
         this.tokens.push({ tipo: "mais" })
@@ -77,6 +83,45 @@ class Lexer {
   }
 }
 
-const code = '+1222+1345' //Constante que receberá o comando 
+class Parser{
+  tokens: Token[];
+  idx: number = 0; 
+  ast: Ast[] = [];  
+  constructor(tokens:Token[]) {
+    this.tokens = tokens;
+  }
+
+  parse(): Ast[] {
+      const tokenAtual = this.tokens[this.idx]
+      const token2 = this.tokens[this.idx+1]
+      const token3 = this.tokens[this.idx+2]
+    console.log(this.tokens)
+    if ( tokenAtual.tipo === "numero" && token2.tipo === "mais" && token3.tipo == "numero") {
+      this.ast.push({x:tokenAtual.valor, tipo:"soma", y:token3.valor} )
+    }
+    
+    return this.ast;
+  }
+}
+
+class Interpreter{
+  ast: Ast[]; 
+  idx: number = 0;
+  
+  constructor(ast: Ast[]) {
+    this.ast = ast; 
+  }
+
+  interp(): number {
+    const x: number = this.ast[0].x 
+    const y: number = this.ast[0].y 
+    
+    return x+y; 
+  }
+} 
+
+const code = "14+3" //Constante que receberá o comando 
 const lexer = new Lexer(code);
-console.log(lexer.lex());
+const parser = new Parser(lexer.lex())
+const interpreter = new Interpreter(parser.parse())
+console.log(interpreter.interp());
