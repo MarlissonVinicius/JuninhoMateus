@@ -1,8 +1,11 @@
 type Token =
   | { tipo: 'numero', valor: number }
   | { tipo: 'mais' }
+  | { tipo: 'menos'}
 
-type Ast = { tipo: 'soma', x: number, y: number }
+type Ast =
+  | { tipo: 'soma', x: number, y: number}
+  | { tipo: 'subtracao', x: number, y: number }
 
 class Lexer {
   code: string;
@@ -50,8 +53,13 @@ class Lexer {
 
         this.tokens.push({ tipo: 'numero', valor: parseInt(number) });
         this.next();
+
       } else if (code[this.idx] === '+') {
         this.tokens.push({ tipo: 'mais' });
+        this.next();
+
+      } else if (code[this.idx] === '-') {
+        this.tokens.push({ tipo: 'menos' })
         this.next();
       }
     }
@@ -89,8 +97,12 @@ class Parser {
     const token2 = this.tokens[this.idx + 1];
     const token3 = this.tokens[this.idx + 2];
 
-    if (tokenAtual.tipo === 'numero' && token2.tipo === 'mais' && token3.tipo == 'numero') {
-      this.ast.push({ x: tokenAtual.valor, tipo: 'soma', y: token3.valor });
+    if (tokenAtual.tipo === 'numero' && token3.tipo == 'numero') {
+      if (token2.tipo === 'mais') {
+        this.ast.push({ x: tokenAtual.valor, tipo: 'soma', y: token3.valor });
+      } else if (token2.tipo === 'menos') {
+        this.ast.push({ x: tokenAtual.valor, tipo: 'subtracao', y: token3.valor });
+      }
     }
 
     return this.ast;
@@ -105,15 +117,28 @@ class Interpreter {
     this.ast = ast;
   }
 
-  interp(): number {
+  interp(): number { 
     const x: number = this.ast[0].x;
     const y: number = this.ast[0].y;
-
-    return x + y;
+    if (this.ast.length > 0) {
+      if (this.ast[0].tipo === 'soma') {
+      return x+y
+      } else if (this.ast[0].tipo === 'subtracao') {
+      return x-y
+      }
+    }
+    
   }
 }
 
-const code = '14+2'
+const enter = '14 - 22'
+let code = ''; 
+for (let i = 0; i < enter.length; i++) {
+  if (enter[i] != " ") {
+    code+=enter[i];
+  }
+  
+}
 const lexer = new Lexer(code);
 const parser = new Parser(lexer.lex())
 const interpreter = new Interpreter(parser.parse());
